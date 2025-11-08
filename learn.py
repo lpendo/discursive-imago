@@ -20,11 +20,14 @@ EffectsL = ( "Inflict Damage", "Perform Healing", "Impose a Condition/Tilt",
             "Protect something", "Hide something" )
 Effects = st.selectbox("What is your spell going to do?",EffectsL)
 
-# PracticesL = ( "●Compelling", "●Knowing", "●Unvieling", "●●Ruling", 
-#               "●●Shielding", "●●Veiling", "●●●Fraying", "●●●Perfecting", 
-#               "●●●Weaving","●●●●Patterning", "●●●●Unraveling", "●●●●●Making", 
-#               "●●●●●Unmaking" )
-# Practices = st.selectbox("Which practice?",PracticesL)
+PracticesL = (
+    ( "●Compelling", "●Knowing", "●Unvieling", ),
+    ( "●●Ruling", "●●Shielding", "●●Veiling", ),
+    ( "●●●Fraying", "●●●Perfecting", "●●●Weaving", ),
+    ("●●●●Patterning", "●●●●Unraveling", ),
+    ("●●●●●Making", "●●●●●Unmaking" ),
+)
+# Practice = st.selectbox("Which practice?",PracticesL)
 
 
 # RankL = ( "Initiate(●)", "Apprentice(●●)", "Disciple(●●●)", "Adept(●●●●)",
@@ -35,8 +38,18 @@ Effects = st.selectbox("What is your spell going to do?",EffectsL)
 # st.write("Path:", MagePath)
 # st.write("Arcana:", Arcana)
 
-st.write("Effect:", Effects)
-
 if Effects == EffectsL[0]:
     DamageKind = ("Bashing", "Lethal", "Aggravated")
-    st.selectbox("Damage type?", DamageKind)
+    DamageType = st.selectbox("Damage type?", DamageKind)
+
+    if DamageType == DamageKind[0]:
+        Practice = PracticesL[2][0]
+    if DamageType == DamageKind[1]:
+        Practice = PracticesL[3][1]
+    if DamageType == DamageKind[2]:
+        Practice = PracticesL[4][1]
+
+    
+
+st.write("Effect:", Effects)
+st.write("Effect:", Practice)
