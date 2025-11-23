@@ -1,15 +1,8 @@
 import streamlit as st
 
-ArcanuaTup = (
+ArcanumTup = (
     "Death", "Fate", "Forces", "Life", "Matter", "Mind", "Prime", "Space", 
     "Spirit", "Time"
-)
-
-HighArc = st.selectbox(
-    "What is the highest Arcanum used in the spell?",
-    ArcanuaTup,
-    index=None,
-    placeholder="Arcanum?" 
 )
 
 RankTup = ("●Initiate", "●●Apprentice", "●●●Disciple", 
@@ -18,6 +11,35 @@ RankTup = ("●Initiate", "●●Apprentice", "●●●Disciple",
 RitualIntervalTup = (
     "3 Hours","1 Hour", "30 Minutes", "10 Minutes", "1 Minute"
 )
+
+StandDurationTup = (
+    "1 turn", "2 turn", "3 turns", "5 turns", "10 turns", ">10 turns"
+)
+AdvDurationTup = (
+    "1 hour", "1 day", "1 week", "1 month", "1 year", "Indefinite*"
+)
+
+
+StandDurationTup = (
+    "1 turn", "2 turn", "3 turns", "5 turns", "10 turns", ">10 turns"
+)
+AdvDurationTup = (
+    "1 hour", "1 day", "1 week", "1 month", "1 year", "Indefinite*"
+)
+
+
+
+
+HighArc = st.selectbox(
+    "What is the highest Arcanum used in the spell?",
+    ArcanumTup,
+    index=None,
+    placeholder="Arcanum?" 
+)
+
+
+
+st.divider()
 
 if HighArc != None:
     HighArcStr = st.selectbox(
@@ -34,25 +56,33 @@ if HighArc != None:
         placeholder="No. of Dots?" 
     )
 
-    CasterGnosis = st.selectbox(
-        "What is the caster's level of Gnosis?",
-        range(1,11),
-        placeholder="Gnosis?"
-    )
 
-    GnosisIdx = (CasterGnosis-1) // 2
 
-    RitualInterval = RitualIntervalTup[GnosisIdx]
+    st.divider()
 
     HighArcDots = 5
-    if HighArcStr != None: HighArcDots = RankTup.index(HighArcStr) 
+    if HighArcStr != None: HighArcDots = RankTup.index(HighArcStr) + 1
 
     CasterArcDots = 0
-    if CasterArcStr != None: CasterArcDots = RankTup.index(CasterArcStr)
+    if CasterArcStr != None: CasterArcDots = RankTup.index(CasterArcStr) + 1
 
     FreeReach = CasterArcDots - HighArcDots + 1
 
+    WithstandRating = CasterArcDots
+
     if FreeReach > 0:
+
+        CasterGnosis = st.selectbox(
+            "What is the caster's level of Gnosis?",
+            range(1,11),
+            placeholder="Gnosis?"
+        )
+        GnosisIdx = (CasterGnosis-1) // 2
+        RitualInterval = RitualIntervalTup[GnosisIdx]
+
+
+
+        st.divider()
 
         CastingType = st.selectbox(
             "What is the spellcasting method?",
@@ -60,25 +90,56 @@ if HighArc != None:
             index=0
         )
 
+        st.divider()
+
         if CastingType == "Rote": FreeReach = 5 - HighArcDots + 1
         st.write("Free Reach:", FreeReach)
 
+
+
+        st.divider()
+
         Reach = 0
+        Mana = 0
+        DicePenalty = 0
+
+        if st.checkbox(
+            "Spend a Reach for +2 to Withstand dispellation?", 
+            value=False
+        ):
+            Reach += 1
+            WithstandRating += 2
+
+
+
+        st.divider()
+
+        if st.checkbox(
+            "Spend a Reach to change the Primary Spell Factor?", 
+            value=False
+        ):
+            Reach += 1
 
         CastingType = st.selectbox(
-            "What is the Primary Spell Factor?",
-            ("Potentcy","Duration"),
+            "What is the final Primary Spell Factor?",
+            ("Potency","Duration"),
             index=0
         )
 
-        # CastingPotency = 
+
+
+        st.divider()
 
         CastingTime = st.selectbox(
-            "What is the spellcasting duration?",
+            "What is the spell casting time?",
             ("Ritual ("+RitualInterval+")","Instant",),
             index=0
         )
         if CastingTime == "Instant": Reach += 1
+
+        
+        
+        st.divider()
 
         CastingRange = st.selectbox(
             "What is the spellcasting range?",
@@ -86,6 +147,108 @@ if HighArc != None:
             index = 0
         )
         if CastingRange == "Sensory": Reach += 1
+
+        
+        
+        st.divider()
+
+        MinPotency = 0
+        if CastingType == "Potency": MinPotency += CasterArcDots - 1
+        
+        SpellPotency = st.number_input("Set the Potency of the Spell",
+            min_value=MinPotency
+        )
+        DicePenalty += -2*( SpellPotency - MinPotency )
+
+        
+        
+        st.divider()
+
+        MinDurationIdx = 0
+        if CastingType == "Duration": MinDurationIdx += CasterArcDots - 1
+        
+        AdvDur = st.checkbox(
+            "Spend a Reach for Advanced Duration?", value=False
+        )
+
+        if AdvDur:
+            DurationTup = AdvDurationTup[MinDurationIdx:]
+            Reach += 1
+        else:
+            DurationTup = StandDurationTup[MinDurationIdx:]
+
+        SpellDuration = st.selectbox(
+            "Set the Duration Spell Factor of your spell?",
+            DurationTup,
+            index = 0
+        )
+
+        if SpellDuration == DurationTup[-1] and not AdvDur:
+            SpellDurationVal = st.number_input(
+                "Set the duration of the Spell",
+                min_value=11
+            )
+            DicePenalty += ( SpellDurationVal - 10 )//10
+
+        if SpellDuration == AdvDurationTup[-1]:
+            if st.checkbox(
+                "Will you spend a Reach and a Mana to make the spell have Indefinite duration?",
+                value = True
+            ):
+                Reach += 1
+                Mana += 1
+            else:
+                st.write("Without spending a Reach and a Mana, Spell Duration is limited to 1 year.")
+                SpellDuration = AdvDurationTup[-2]
+
+        DicePenalty += -2*( DurationTup.index(SpellDuration) )
+
+        st.divider()
+
+        ScaleType = st.selectbox(
+            "What type of Scale are you using?",
+            ("Number of Subjects","Area of Effect",),
+            index = None,
+            placeholder="Type?" 
+        )
+
+        StandSubjectNumTup = (
+            "1 subject", "2 subject", "4 subject", "8 subject", "16 subject",
+        )
+
+        StandSubjectMaxSizeTup = (
+            5, 6, 7, 8, 9,
+        )
+
+        StandAreaTup = (
+            "Arm's reach from a central point", "A small room", 
+            "A large room", "Several rooms, or a single floor", 
+            "A ballroom or small house",
+        )
+
+        
+
+        AdvSubjectNumTup = (
+            "5 subject", "10 subject", "20 subject", "40 subject", "80 subject",
+            "160 subjects"
+        )
+
+        AdvSubjectMaxSizeTup = (
+            5, 10, 15, 20, 25, 30
+        )
+
+        AdvAreaTup = (
+            "Large building", "A small warehouse or parking lot", 
+            "A large warehouse or supermarket", 
+            "A small factory or a shopping mall", 
+            "A ballroom or small house",
+        )
+
+
+
+        st.divider()
+
+        st.write("Final Dice Penalty to spellcasting:", DicePenalty)
 
         st.write("Total Reach used in Spell:", Reach)
         ParadoxReach = max(0,Reach-FreeReach)
@@ -95,61 +258,3 @@ if HighArc != None:
 
     else:
         st.write("Spell cannot be cast!")
-
-# Mana = 0
-# Reach = 0
-# Potency = 1
-
-# EffectsL = ( "Inflict Damage", "Perform Healing", "Impose a Condition/Tilt",
-#             "Provide a Bonus/Penalty to a Trait", "Add a dice poll efffect", 
-#             "Protect something", "Hide something" )
-# Effects = st.selectbox("What is your spell going to do?",EffectsL)
-
-# PracticesL = (
-#     ( "●Compelling", "●Knowing", "●Unvieling", ),
-#     ( "●●Ruling", "●●Shielding", "●●Veiling", ),
-#     ( "●●●Fraying", "●●●Perfecting", "●●●Weaving", ),
-#     ("●●●●Patterning", "●●●●Unraveling", ),
-#     ("●●●●●Making", "●●●●●Unmaking" ),
-# )
-# # Practice = st.selectbox("Which practice?",PracticesL)
-
-
-# # RankL = ( "Initiate(●)", "Apprentice(●●)", "Disciple(●●●)", "Adept(●●●●)",
-# #          "Master(●●●●●)" )
-# # Rank = st.selectbox("What rank?",RankL)
-
-
-# # st.write("Path:", MagePath)
-# # st.write("Arcana:", Arcana)
-
-# if Effects == EffectsL[0]:
-#     DamageKind = ("Bashing", "Lethal", "Aggravated")
-#     DamageType = st.selectbox("Damage type?", DamageKind)
-
-#     if DamageType == DamageKind[0]:
-#         Practice = PracticesL[2][0]
-#     else:
-#         Practice = PracticesL[3][1]
-        
-#     if DamageType == DamageKind[2]:
-#         Mana += 1
-#         Reach += 1
-
-#     DamageAmount = st.selectbox("How much damage?", )
-
-# if Effects == EffectsL[1]:
-#     DamageKind = ("Bashing", "Lethal", "Aggravated")
-#     DamageType = st.selectbox("Damage type?", DamageKind)
-
-#     if DamageType == DamageKind[0]:
-#         Practice = PracticesL[2][0]
-#     if DamageType == DamageKind[1]:
-#         Practice = PracticesL[3][1]
-#     if DamageType == DamageKind[2]:
-#         Practice = PracticesL[4][1]
-
-
-
-# st.write("Effect:", Effects)
-# st.write("Effect:", Practice)
