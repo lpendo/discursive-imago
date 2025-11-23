@@ -228,7 +228,7 @@ if HighArc != None:
                 "Set the duration of the Spell",
                 min_value=11
             )
-            DicePenalty += ( SpellDurationVal - 10 )//10
+            DicePenalty += -2*( ( SpellDurationVal - 10 )//10 )
 
         if SpellDuration == AdvDurationTup[-1]:
             if st.checkbox(
