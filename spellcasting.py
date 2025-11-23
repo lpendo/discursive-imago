@@ -5,20 +5,15 @@ ArcanumTup = (
     "Spirit", "Time"
 )
 
+
 RankTup = ("●Initiate", "●●Apprentice", "●●●Disciple", 
      "●●●●Adept", "●●●●●Master")
+
 
 RitualIntervalTup = (
     "3 Hours","1 Hour", "30 Minutes", "10 Minutes", "1 Minute"
 )
 
-StandDurationTup = (
-    "1 turn", "2 turn", "3 turns", "5 turns", "10 turns", ">10 turns"
-)
-AdvDurationTup = (
-    "1 hour", "1 day", "1 week", "1 month", "1 year", "Indefinite*"
-)
-
 
 StandDurationTup = (
     "1 turn", "2 turn", "3 turns", "5 turns", "10 turns", ">10 turns"
@@ -28,6 +23,47 @@ AdvDurationTup = (
 )
 
 
+StandDurationTup = (
+    "1 turn", "2 turn", "3 turns", "5 turns", "10 turns", ">10 turns"
+)
+AdvDurationTup = (
+    "1 hour", "1 day", "1 week", "1 month", "1 year", "Indefinite*"
+)
+
+
+StandSubjectNumTup = (
+"1 subject", "2 subject", "4 subject", "8 subject", "16 subject",
+)
+
+StandSubjectMaxSizeTup = (
+5, 6, 7, 8, 9,
+)
+
+
+
+
+AdvSubjectNumTup = (
+"5 subject", "10 subject", "20 subject", "40 subject", "80 subject",
+"160 subjects"
+)
+
+AdvSubjectMaxSizeTup = (
+5, 10, 15, 20, 25, 30
+)
+
+
+StandAreaTup = (
+"Arm's reach from a central point", "A small room", 
+"A large room", "Several rooms, or a single floor", 
+"A ballroom or small house",
+)
+
+AdvAreaTup = (
+"Large building", "A small warehouse or parking lot", 
+"A large warehouse or supermarket", 
+"A small factory or a shopping mall", 
+"A ballroom or small house",
+) 
 
 
 HighArc = st.selectbox(
@@ -203,7 +239,13 @@ if HighArc != None:
 
         DicePenalty += -2*( DurationTup.index(SpellDuration) )
 
+
+
         st.divider()
+
+        AdvScale = st.checkbox(
+            "Spend a Reach for Advanced Scale?", value=False
+        )
 
         ScaleType = st.selectbox(
             "What type of Scale are you using?",
@@ -212,38 +254,27 @@ if HighArc != None:
             placeholder="Type?" 
         )
 
-        StandSubjectNumTup = (
-            "1 subject", "2 subject", "4 subject", "8 subject", "16 subject",
-        )
+        if ScaleType != None:
+            if AdvScale:
+                if ScaleType == "Number of Subjects":
+                    ScaleTup = AdvSubjectNumTup
+                    SubjectMaxSizeTup = AdvSubjectMaxSizeTup
+                else:
+                    ScaleTup = AdvAreaTup
+            else:
+                if ScaleType == "Number of Subjects":
+                    ScaleTup = StandSubjectNumTup
+                    SubjectMaxSizeTup = StandSubjectMaxSizeTup
+                else:
+                    ScaleTup = StandAreaTup
 
-        StandSubjectMaxSizeTup = (
-            5, 6, 7, 8, 9,
-        )
+            SpellScale = st.selectbox(
+                "Set the Scale Spell Factor of your spell?",
+                ScaleTup,
+                index = 0
+            )
 
-        StandAreaTup = (
-            "Arm's reach from a central point", "A small room", 
-            "A large room", "Several rooms, or a single floor", 
-            "A ballroom or small house",
-        )
-
-        
-
-        AdvSubjectNumTup = (
-            "5 subject", "10 subject", "20 subject", "40 subject", "80 subject",
-            "160 subjects"
-        )
-
-        AdvSubjectMaxSizeTup = (
-            5, 10, 15, 20, 25, 30
-        )
-
-        AdvAreaTup = (
-            "Large building", "A small warehouse or parking lot", 
-            "A large warehouse or supermarket", 
-            "A small factory or a shopping mall", 
-            "A ballroom or small house",
-        )
-
+            DicePenalty += -2*( ScaleTup.index(SpellScale) )
 
 
         st.divider()
