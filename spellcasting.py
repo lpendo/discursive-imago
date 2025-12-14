@@ -32,40 +32,50 @@ AdvDurationTup = (
 
 
 StandSubjectNumTup = (
-"1 subject", "2 subject", "4 subject", "8 subject", "16 subject",
-)
-
-StandSubjectMaxSizeTup = (
-5, 6, 7, 8, 9,
+    "1 subject of up to Size 5", "2 subjects of up to Size 6", 
+    "4 subjects of up to Size 7", "8 subjects of up to Size 8",
+    "16 subjects of up to Size 9",
 )
 
 
 
 
 AdvSubjectNumTup = (
-"5 subject", "10 subject", "20 subject", "40 subject", "80 subject",
-"160 subjects"
-)
-
-AdvSubjectMaxSizeTup = (
-5, 10, 15, 20, 25, 30
+    "5 subjects up to Size 5", "10 subjects up to Size 10",
+    "20 subjects up to Size 15", "40 subjects up to Size 20",
+    "80 subjects up to Size 25", "160 subjects up to Size 30"
 )
 
 
 StandAreaTup = (
-"Arm's reach from a central point", "A small room", 
-"A large room", "Several rooms, or a single floor", 
-"A ballroom or small house",
+    "Arm's reach from a central point", "A small room", 
+    "A large room", "Several rooms, or a single floor", 
+    "A ballroom or small house",
 )
 
 AdvAreaTup = (
-"Large building", "A small warehouse or parking lot", 
-"A large warehouse or supermarket", 
-"A small factory or a shopping mall", 
-"A ballroom or small house",
+    "Large building", "A small warehouse or parking lot", 
+    "A large warehouse or supermarket", 
+    "A small factory or a shopping mall", 
+    "A ballroom or small house",
 ) 
 
 
+YantrasTup = (
+    ("Demesne/Verge", 2,), ("Resonant Environment", 1),
+    ("Concentration (requires Duration longer than a turn)", 2),
+    ("Mantra (requires High Speech Merit)", 2),
+    ("Runes", 2), ("Path/Order/Dedicated Tool", 1),
+    ("Material sympathy", 2), ("Representational sympathy", 1),
+    ("Common material Sacrament", 1),
+    ("Special material Sacrament", 2),
+    ("Non-material Sacrament", 3),
+    ("Mudra/Rote", "Skill Dots?",),
+    ("Exarch Prelacy", "Prelacy Dots?",),
+    ("Persona", ("Shadow Name Dots?", "Cabal Theme Dots?"),),
+)
+
+#-------------------------------------------------------------------------------
 HighArc = st.selectbox(
     "What is the highest Arcanum used in the spell?",
     ArcanumTup,
@@ -258,13 +268,11 @@ if HighArc != None:
             if AdvScale:
                 if ScaleType == "Number of Subjects":
                     ScaleTup = AdvSubjectNumTup
-                    SubjectMaxSizeTup = AdvSubjectMaxSizeTup
                 else:
                     ScaleTup = AdvAreaTup
             else:
                 if ScaleType == "Number of Subjects":
                     ScaleTup = StandSubjectNumTup
-                    SubjectMaxSizeTup = StandSubjectMaxSizeTup
                 else:
                     ScaleTup = StandAreaTup
 
@@ -274,7 +282,16 @@ if HighArc != None:
                 index = 0
             )
 
-            DicePenalty += -2*( ScaleTup.index(SpellScale) )
+            ScaleIdx = ScaleTup.index(SpellScale)
+            DicePenalty += -2*ScaleIdx
+
+
+        st.divider()
+
+        st.write("Yantras?")
+
+        st.checkbox(YantrasTup[0][0])
+
 
 
         st.divider()
