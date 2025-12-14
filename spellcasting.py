@@ -172,7 +172,14 @@ if HighArc != None:
             index=0
         )
 
+        MinPotency = 1
+        MinDuration = 0
+        MinFactor = CasterArcDots - 1
+        if CastingType == "Potency": MinPotency += MinFactor
+        if CastingType == "Duration": MinDuration += MinFactor
 
+        st.write("Potency Min: ", MinPotency)
+        st.write("Duration Min Idx: ", MinDuration)
 
         st.divider()
 
@@ -197,31 +204,28 @@ if HighArc != None:
         
         
         st.divider()
-
-        MinPotency = 0
-        if CastingType == "Potency": MinPotency += CasterArcDots - 1
         
-        SpellPotency = st.number_input("Set the Potency of the Spell",
+        SpellPotency = st.number_input(
+            "Set the Potency of the Spell",
             min_value=MinPotency
         )
         DicePenalty += -2*( SpellPotency - MinPotency )
-
-        
+        st.write("MinPotency: ", MinPotency)
         
         st.divider()
 
-        MinDurationIdx = 0
-        if CastingType == "Duration": MinDurationIdx += CasterArcDots - 1
+        # MinDurationIdx = 0
+        # if CastingType == "Duration": MinDurationIdx += CasterArcDots - 1
         
         AdvDur = st.checkbox(
             "Spend a Reach for Advanced Duration?", value=False
         )
 
         if AdvDur:
-            DurationTup = AdvDurationTup[MinDurationIdx:]
+            DurationTup = AdvDurationTup[MinDuration:]
             Reach += 1
         else:
-            DurationTup = StandDurationTup[MinDurationIdx:]
+            DurationTup = StandDurationTup[MinDuration:]
 
         SpellDuration = st.selectbox(
             "Set the Duration Spell Factor of your spell?",
@@ -234,7 +238,7 @@ if HighArc != None:
                 "Set the duration of the Spell",
                 min_value=11
             )
-            DicePenalty += ( SpellDurationVal - 10 )//10
+            DicePenalty += -2*( ( SpellDurationVal - 10 )//10 )
 
         if SpellDuration == AdvDurationTup[-1]:
             if st.checkbox(
