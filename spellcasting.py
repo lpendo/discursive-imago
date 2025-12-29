@@ -406,7 +406,7 @@ if HighArc != None:
             st.write("Spellcasting Factors Penalty:", SpellFactorPenalty)
             st.write("Raw Yantra Bonus:", YantraBonus)
             
-            SpellAdj = max(5,YantraBonus+SpellFactorPenalty)
+            SpellAdj = min(5,YantraBonus+SpellFactorPenalty)
             st.write(
                 "Yantra Bonus after mitigating Spell Factors (max +5):"
                 ,SpellAdj
