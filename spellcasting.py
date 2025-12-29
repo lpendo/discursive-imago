@@ -1,5 +1,7 @@
 import streamlit as st
 
+sesh = st.session_state
+
 ArcanumTup = (
     "Death", "Fate", "Forces", "Life", "Matter", "Mind", "Prime", "Space", 
     "Spirit", "Time"
@@ -7,11 +9,11 @@ ArcanumTup = (
 
 
 RankTup = ("●Initiate", "●●Apprentice", "●●●Disciple", 
-     "●●●●Adept", "●●●●●Master")
+    "●●●●Adept", "●●●●●Master")
 
 
 RitualIntervalTup = (
-    "3 Hours","1 Hour", "30 Minutes", "10 Minutes", "1 Minute"
+    "3 Hours", "1 Hour", "30 Minutes", "10 Minutes", "1 Minute"
 )
 
 
@@ -61,19 +63,34 @@ AdvAreaTup = (
 ) 
 
 
-YantrasTup = (
+SimpleYantrasTup = (
     ("Demesne/Verge", 2,), ("Resonant Environment", 1),
-    ("Concentration (requires Duration longer than a turn)", 2),
+    (
+        "Concentration (requires Duration longer than a turn,"
+        +" must be maintained)", 
+        2
+    ),
     ("Mantra (requires High Speech Merit)", 2),
     ("Runes", 2), ("Path/Order/Dedicated Tool", 1),
     ("Material sympathy", 2), ("Representational sympathy", 1),
     ("Common material Sacrament", 1),
     ("Special material Sacrament", 2),
     ("Non-material Sacrament", 3),
+)
+
+PrereqTantrasTup = (
     ("Mudra/Rote", "Skill Dots?",),
     ("Exarch Prelacy", "Prelacy Dots?",),
     ("Persona", ("Shadow Name Dots?", "Cabal Theme Dots?"),),
 )
+#-------------------------------------------------------------------------------
+
+def ResetYantras():
+    sesh.YantraIdxs = [False] * len(SimpleYantrasTup)
+    for n in range(len(sesh.YantraIdxs)):
+        sesh["SimpleYantra"+str(n)] = sesh.YantraIdxs[n]
+
+
 
 #-------------------------------------------------------------------------------
 HighArc = st.selectbox(
@@ -82,7 +99,7 @@ HighArc = st.selectbox(
     index=None,
     placeholder="Arcanum?" 
 )
-
+RulingArcana = st.checkbox("Is this a Ruling Arcana for your Path?")
 
 
 st.divider()
@@ -121,191 +138,348 @@ if HighArc != None:
         CasterGnosis = st.selectbox(
             "What is the caster's level of Gnosis?",
             range(1,11),
-            placeholder="Gnosis?"
+            index=None,
+            placeholder="Gnosis?",
+            on_change=ResetYantras
         )
-        GnosisIdx = (CasterGnosis-1) // 2
-        RitualInterval = RitualIntervalTup[GnosisIdx]
-
-
-
-        st.divider()
-
-        CastingType = st.selectbox(
-            "What is the spellcasting method?",
-            ("Improvised","Rote","Praxis"),
-            index=0
-        )
-
-        st.divider()
-
-        if CastingType == "Rote": FreeReach = 5 - HighArcDots + 1
-        st.write("Free Reach:", FreeReach)
-
-
-
-        st.divider()
-
-        Reach = 0
-        Mana = 0
-        DicePenalty = 0
-
-        if st.checkbox(
-            "Spend a Reach for +2 to Withstand dispellation?", 
-            value=False
-        ):
-            Reach += 1
-            WithstandRating += 2
-
-
-
-        st.divider()
-
-        if st.checkbox(
-            "Spend a Reach to change the Primary Spell Factor?", 
-            value=False
-        ):
-            Reach += 1
-
-        CastingType = st.selectbox(
-            "What is the final Primary Spell Factor?",
-            ("Potency","Duration"),
-            index=0
-        )
-
-        MinPotency = 1
-        MinDuration = 0
-        MinFactor = CasterArcDots - 1
-        if CastingType == "Potency": MinPotency += MinFactor
-        if CastingType == "Duration": MinDuration += MinFactor
-
-        st.write("Potency Min: ", MinPotency)
-        st.write("Duration Min Idx: ", MinDuration)
-
-        st.divider()
-
-        CastingTime = st.selectbox(
-            "What is the spell casting time?",
-            ("Ritual ("+RitualInterval+")","Instant",),
-            index=0
-        )
-        if CastingTime == "Instant": Reach += 1
-
         
-        
-        st.divider()
+        if CasterGnosis:
 
-        CastingRange = st.selectbox(
-            "What is the spellcasting range?",
-            ("Self/Touch","Sensory",),
-            index = 0
-        )
-        if CastingRange == "Sensory": Reach += 1
-
-        
-        
-        st.divider()
-        
-        SpellPotency = st.number_input(
-            "Set the Potency of the Spell",
-            min_value=MinPotency
-        )
-        DicePenalty += -2*( SpellPotency - MinPotency )
-        st.write("MinPotency: ", MinPotency)
-        
-        st.divider()
-
-        # MinDurationIdx = 0
-        # if CastingType == "Duration": MinDurationIdx += CasterArcDots - 1
-        
-        AdvDur = st.checkbox(
-            "Spend a Reach for Advanced Duration?", value=False
-        )
-
-        if AdvDur:
-            DurationTup = AdvDurationTup[MinDuration:]
-            Reach += 1
-        else:
-            DurationTup = StandDurationTup[MinDuration:]
-
-        SpellDuration = st.selectbox(
-            "Set the Duration Spell Factor of your spell?",
-            DurationTup,
-            index = 0
-        )
-
-        if SpellDuration == DurationTup[-1] and not AdvDur:
-            SpellDurationVal = st.number_input(
-                "Set the duration of the Spell",
-                min_value=11
+            GnosisIdx = (CasterGnosis-1) // 2
+            sesh.NumberOfYantras = GnosisIdx + 2
+            sesh.BaseRitualInterval = RitualIntervalTup[GnosisIdx]
+            sesh.RitualCastingText = (
+                "Ritual ("
+                + sesh.BaseRitualInterval
+                + ")"
             )
-            DicePenalty += -2*( ( SpellDurationVal - 10 )//10 )
+            sesh.ParadoxPerReach = GnosisIdx+1
 
-        if SpellDuration == AdvDurationTup[-1]:
+
+            st.divider()
+
+            CastingType = st.selectbox(
+                "What is the spellcasting method?",
+                ("Improvised","Rote","Praxis"),
+                index=0
+            )
+            if not RulingArcana and CastingType == "Improvised":
+                Mana = 1
+            else:
+                Mana = 0
+
+
+            st.divider()
+
+            if CastingType == "Rote": FreeReach = 5 - HighArcDots + 1
+            st.write("Free Reach:", FreeReach)
+
+
+
+            st.divider()
+
+            Reach = 0
+            SpellFactorPenalty = 0
+
             if st.checkbox(
-                "Will you spend a Reach and a Mana to make the spell have Indefinite duration?",
-                value = True
+                "Spend a Reach for +2 to Withstand dispellation?", 
+                value=False
             ):
                 Reach += 1
-                Mana += 1
+                WithstandRating += 2
+
+
+
+            st.divider()
+
+            if st.checkbox(
+                "Spend a Reach to change the Primary Spell Factor?", 
+                value=False
+            ):
+                Reach += 1
+
+            CastingType = st.selectbox(
+                "What is the final Primary Spell Factor?",
+                ("Potency","Duration"),
+                index=0
+            )
+
+            MinPotency = 1
+            MinDuration = 0
+            MinFactor = CasterArcDots - 1
+            if CastingType == "Potency": MinPotency += MinFactor
+            if CastingType == "Duration": MinDuration += MinFactor
+            
+            
+            st.divider()
+
+            CastingRange = st.selectbox(
+                "What is the spellcasting range?",
+                ("Self/Touch","Sensory",),
+                index = 0
+            )
+            if CastingRange == "Sensory": Reach += 1
+
+            
+            
+            st.divider()
+            
+            SpellPotency = st.number_input(
+                "Set the Potency of the Spell",
+                min_value=MinPotency,
+                max_value=30
+            )
+            SpellFactorPenalty += -2*( SpellPotency - MinPotency )
+            # st.write("MinPotency: ", MinPotency)
+            
+            st.divider()
+
+            # MinDurationIdx = 0
+            # if CastingType == "Duration": MinDurationIdx += CasterArcDots - 1
+            
+            AdvDur = st.checkbox(
+                "Spend a Reach for Advanced Duration?", value=False
+            )
+
+            if AdvDur:
+                DurationTup = AdvDurationTup[MinDuration:]
+                Reach += 1
             else:
-                st.write("Without spending a Reach and a Mana, Spell Duration is limited to 1 year.")
-                SpellDuration = AdvDurationTup[-2]
+                DurationTup = StandDurationTup[MinDuration:]
 
-        DicePenalty += -2*( DurationTup.index(SpellDuration) )
-
-
-
-        st.divider()
-
-        AdvScale = st.checkbox(
-            "Spend a Reach for Advanced Scale?", value=False
-        )
-
-        ScaleType = st.selectbox(
-            "What type of Scale are you using?",
-            ("Number of Subjects","Area of Effect",),
-            index = None,
-            placeholder="Type?" 
-        )
-
-        if ScaleType != None:
-            if AdvScale:
-                if ScaleType == "Number of Subjects":
-                    ScaleTup = AdvSubjectNumTup
-                else:
-                    ScaleTup = AdvAreaTup
-            else:
-                if ScaleType == "Number of Subjects":
-                    ScaleTup = StandSubjectNumTup
-                else:
-                    ScaleTup = StandAreaTup
-
-            SpellScale = st.selectbox(
-                "Set the Scale Spell Factor of your spell?",
-                ScaleTup,
+            SpellDuration = st.selectbox(
+                "Set the Duration Spell Factor of your spell?",
+                DurationTup,
                 index = 0
             )
 
-            ScaleIdx = ScaleTup.index(SpellScale)
-            DicePenalty += -2*ScaleIdx
+            if SpellDuration == DurationTup[-1] and not AdvDur:
+                SpellDurationVal = st.number_input(
+                    "Set the duration of the Spell (in turns)",
+                    min_value=11,
+                    max_value=159
+                )
+                SpellFactorPenalty += -2*( ( SpellDurationVal - 10 )//10 )
+
+            if SpellDuration == AdvDurationTup[-1]:
+                IndefiniteSpell = st.checkbox(
+                    "Will you spend a Reach and a Mana to make the spell "
+                    + "have Indefinite duration?",
+                    value = True
+                )
+                if IndefiniteSpell:
+                    Reach += 1
+                    Mana += 1
+                else:
+                    st.write(
+                        "Without spending a Reach and a Mana, ",
+                        "Spell Duration is limited to 1 year."
+                    )
+                    SpellDuration = AdvDurationTup[-2]
+
+            SpellFactorPenalty += -2*( DurationTup.index(SpellDuration) )
 
 
-        st.divider()
+            st.divider()
 
-        st.write("Yantras?")
+            AdvScale = st.checkbox(
+                "Spend a Reach for Advanced Scale?", value=False
+            )
 
-        st.checkbox(YantrasTup[0][0])
+            ScaleType = st.selectbox(
+                "What type of Scale are you using?",
+                ("Number of Subjects","Area of Effect",),
+                index = None,
+                placeholder="Type?" 
+            )
+
+            if ScaleType is None:
+                st.stop()
+            else:
+                if AdvScale:
+                    if ScaleType == "Number of Subjects":
+                        ScaleTup = AdvSubjectNumTup
+                    else:
+                        ScaleTup = AdvAreaTup
+                else:
+                    if ScaleType == "Number of Subjects":
+                        ScaleTup = StandSubjectNumTup
+                    else:
+                        ScaleTup = StandAreaTup
+
+                SpellScale = st.selectbox(
+                    "Set the Scale Spell Factor of your spell?",
+                    ScaleTup,
+                    index = 0
+                )
+
+                ScaleIdx = ScaleTup.index(SpellScale)
+                SpellFactorPenalty += -2*ScaleIdx
 
 
+            st.divider()
 
-        st.divider()
+            CastingTimeBonus = 0
+            CastingTime = st.selectbox(
+                "What is the spell casting time?",
+                (sesh.RitualCastingText,"Instant",),
+                index=0
+            )
+            if CastingTime == "Instant": 
+                Reach += 1
+            else:
+                RitualIntervals = st.number_input(
+                    "How many Ritual spellcasting intervals will you use?",
+                    min_value=1,
+                    max_value=6
+                )
+                CastingTimeBonus = RitualIntervals-1
+            
+                num,unit = sesh.BaseRitualInterval.split()
+                num = int(num) * RitualIntervals
+                if unit == "Minutes":
+                    if num >= 60:
+                        num /= 60
+                        unit = "Hours"
+                st.write("Total spellcasting time:", str(num)+" "+unit)
+                st.write("Total spellcasting time Bonus:", CastingTimeBonus)
 
-        st.write("Final Dice Penalty to spellcasting:", DicePenalty)
+            st.divider()
 
-        st.write("Total Reach used in Spell:", Reach)
-        ParadoxReach = max(0,Reach-FreeReach)
-        st.write("Total Paradox Reach:", ParadoxReach)
+            st.write("Yantras?")
+            st.write(
+                "You are limited to "
+                ,str(sesh.NumberOfYantras)
+                ," Yantras total."
+                ," This is determine by your Gnosis."
+            )
 
+            YantraBonus = 0
+            for n in range(len(sesh.YantraIdxs)):
+                if "SimpleYantra"+str(n) not in sesh:
+                    sesh["SimpleYantra"+str(n)] = False
+                sesh.YantraIdxs[n] = sesh["SimpleYantra"+str(n)]
+
+
+            sesh.YantrasLeft = sesh.NumberOfYantras - sum(sesh.YantraIdxs)
+            if sesh.YantrasLeft == 0:
+                st.write("No Yantras left!")
+            else:
+                st.write("You have "+str(sesh.YantrasLeft)+" Yantras left.")
+
+            for idx,(type,val,) in enumerate(SimpleYantrasTup):
+                YTxt = type+" (+"+str(val)+")"
+                YKey = "SimpleYantra"+str(idx)
+                if sesh.YantrasLeft == 0:
+                    if sesh.YantraIdxs[idx]:
+                        st.checkbox(YTxt,key=YKey)
+                        YantraBonus += val
+                else:
+                    st.checkbox(YTxt,key=YKey)
+                    if sesh.YantraIdxs[idx]:
+                        YantraBonus += val
+                        
+            st.write("Yantra Bonus:", YantraBonus)
+
+
+            st.divider()
+            
+            MiscBonus = st.number_input(
+                    "Any other bonuses?",
+                    min_value=0,
+                    max_value=40
+            )
+
+            MiscPenalty = st.number_input(
+                    "Any other penalties?",
+                    min_value=0,
+                    max_value=40
+                )
+
+
+            st.divider()
+            DicePool = CasterGnosis+CasterArcDots
+            st.write("Initial spellcasting Dice Pool:", DicePool)
+            
+            
+            st.divider()
+            st.write("Spellcasting Factors Penalty:", SpellFactorPenalty)
+            st.write("Raw Yantra Bonus:", YantraBonus)
+            
+            SpellAdj = max(5,YantraBonus+SpellFactorPenalty)
+            st.write(
+                "Yantra Bonus after mitigating Spell Factors (max +5):"
+                ,SpellAdj
+            )
+
+
+            st.divider()
+            st.write("Casting Time Bonus:", CastingTimeBonus)
+            st.write("Other Bonus:", MiscBonus)
+            st.write("Other Penalty:", -abs(MiscPenalty))
+
+            DicePool += CastingTimeBonus+MiscBonus - abs(MiscPenalty)
+            st.write(
+                "Final Dice Pool (before penalties from released Paradox):", 
+                DicePool
+            )
+
+
+            st.divider()
+            st.write("Mana?")
+
+            Mana += st.number_input(
+                "How much Mana does the spell require?",
+                min_value=0,
+                max_value=100
+            )
+
+            ParadoxMana =st.number_input(
+                "Will you use any Mana to counteract Paradox?",
+                min_value=0,
+                max_value=100
+            )
+            Mana += ParadoxMana
+
+            st.write("Total Mana required to cast the spell:", Mana)
+
+
+            st.divider()
+            st.write("Paradox?")
+
+            # st.write("Total Reach used in Spell:", Reach)
+            ParadoxReach = max(0,Reach-FreeReach)
+            ParadoxDice = sesh.ParadoxPerReach*ParadoxReach
+            st.write("Total Paradox Dice from Reach:", ParadoxDice)
+            
+            if st.checkbox("Are you inured to the spell?"):
+                ParadoxDice += 2
+
+            if st.checkbox("Did any Sleepers witness an obvious casting of magic?"):
+                ParadoxDice += 1
+                SleeperDiceQuality = st.selectbox(
+                    "How many Sleepers saw your casting?",
+                    (
+                        "One",
+                        "A few",
+                        "A lot, less than 100",
+                        "More than a hundred", 
+                    )
+                )
+            if st.checkbox("Are you using a dedicated magical tool?"):
+                ParadoxDice -= 2
+
+            ParadoxDice -= ParadoxMana
+            st.write("Total Paradox Dice after Mana amelioration:", ParadoxDice)
+
+            ParadoxChoice = st.selectbox(
+                "Do you wish to Release or Contain Paradox?",
+                ("Release","Contain"),
+                index=0
+            )
+
+        # else:
+        #     st.write("Please set your Gnosis!")
         
 
     else:
