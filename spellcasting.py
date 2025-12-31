@@ -1,4 +1,5 @@
 import streamlit as st
+from random import randint
 
 sesh = st.session_state
 
@@ -472,11 +473,21 @@ if HighArc != None:
             ParadoxDice -= ParadoxMana
             st.write("Total Paradox Dice after Mana amelioration:", ParadoxDice)
 
-            ParadoxChoice = st.selectbox(
-                "Do you wish to Release or Contain Paradox?",
-                ("Release","Contain"),
-                index=0
-            )
+            if ParadoxDice > 0:
+                ParadoxChoice = st.selectbox(
+                    "Do you wish to Release or Contain Paradox?",
+                    ("Release","Contain"),
+                    index=0
+                )
+
+            if ParadoxChoice == "Release":
+                ParadoxSuccesses = 0
+                NumOfRolls = ParadoxDice
+                while(NumOfRolls>0):
+                    result = randint(1,10)
+                    if result >= 8:
+                        ParadoxSuccesses += 1
+
 
         # else:
         #     st.write("Please set your Gnosis!")
