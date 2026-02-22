@@ -456,17 +456,21 @@ if HighArc != None:
             if st.checkbox("Are you inured to the spell?"):
                 ParadoxDice += 2
 
-            if st.checkbox("Did any Sleepers witness an obvious casting of magic?"):
+            if st.checkbox(
+                "Did any Sleepers witness an obvious casting of magic?"
+            ):
                 ParadoxDice += 1
                 SleeperDiceQuality = st.selectbox(
                     "How many Sleepers saw your casting?",
                     (
-                        "One",
-                        "A few",
-                        "A lot, less than 100",
-                        "More than a hundred", 
-                    )
+                        ("One",10),
+                        ("A few",9),
+                        ("A lot, less than 100",8),
+                        ("More than a hundred","Rote"),
+                    )[1]
                 )
+            else:
+                SleeperDiceQuality = 10
             if st.checkbox("Are you using a dedicated magical tool?"):
                 ParadoxDice -= 2
 
@@ -480,13 +484,26 @@ if HighArc != None:
                     index=0
                 )
 
-            if ParadoxChoice == "Release":
-                ParadoxSuccesses = 0
-                NumOfRolls = ParadoxDice
-                while(NumOfRolls>0):
-                    result = randint(1,10)
-                    if result >= 8:
-                        ParadoxSuccesses += 1
+                if ParadoxChoice == "Release":
+                    ParadoxSuccesses = 0
+                    NumOfRolls = ParadoxDice
+                    ReRollDice = True
+                    while(NumOfRolls>0):
+                        result = randint(1,10)
+                        (NumOfRolls,result)
+                        if result >= 8: ParadoxSuccesses += 1
+                        if SleeperDiceQuality == "Rote":
+                            if result < 8 and ReRollDice:
+                                ReRollDice = False
+                                continue
+                        elif result >= SleeperDiceQuality:
+                            continue
+                        NumOfRolls -= 1
+
+                    ParadoxSuccesses
+                    # if SleeperDiceQuality == "More than a hundred":
+                    #     if result > 7:
+                    #         NumOfRolls -= NumOfRolls
 
 
         # else:
