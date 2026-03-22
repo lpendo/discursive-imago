@@ -199,7 +199,7 @@ if HighArc != None:
             ):
                 Reach += 1
 
-            CastingType = st.selectbox(
+            CastingFactor = st.selectbox(
                 "What is the final Primary Spell Factor?",
                 ("Potency","Duration"),
                 index=0
@@ -208,8 +208,8 @@ if HighArc != None:
             MinPotency = 1
             MinDuration = 0
             MinFactor = CasterArcDots - 1
-            if CastingType == "Potency": MinPotency += MinFactor
-            if CastingType == "Duration": MinDuration += MinFactor
+            if CastingFactor == "Potency": MinPotency += MinFactor
+            if CastingFactor == "Duration": MinDuration += MinFactor
             
             
             st.divider()
@@ -277,6 +277,9 @@ if HighArc != None:
                         "Spell Duration is limited to 1 year."
                     )
                     SpellDuration = AdvDurationTup[-2]
+            else:
+                IndefiniteSpell = False
+
 
             SpellFactorPenalty += -2*( DurationTup.index(SpellDuration) )
 
@@ -419,7 +422,9 @@ if HighArc != None:
             st.write("Other Bonus:", MiscBonus)
             st.write("Other Penalty:", -abs(MiscPenalty))
 
-            DicePool += CastingTimeBonus+MiscBonus - abs(MiscPenalty)
+
+            st.divider()
+            DicePool += CastingTimeBonus+MiscBonus+SpellAdj - abs(MiscPenalty)
             st.write(
                 "Final Dice Pool (before penalties from released Paradox):", 
                 DicePool
@@ -429,21 +434,30 @@ if HighArc != None:
             st.divider()
             st.write("Mana?")
 
+            if not RulingArcana and CastingType == "Improvised":
+                st.write(
+                    "1 Mana required for casting an Improvised spell "
+                    "of non-Ruling Arcana."
+                )
+
+            if IndefiniteSpell:
+                st.write(
+                    "1 Mana required for casting spell of "
+                    "Indefinite Duration."
+                )
+
+
             Mana += st.number_input(
-                "How much Mana does the spell require?",
+                "How much additional Mana does the spell require?",
                 min_value=0,
                 max_value=100
             )
 
-            ParadoxMana =st.number_input(
-                "Will you use any Mana to counteract Paradox?",
-                min_value=0,
-                max_value=100
+            st.write(
+                "Total Mana spell requires before Paradox amelioration: ",
+                Mana
             )
-            Mana += ParadoxMana
-
-            st.write("Total Mana required to cast the spell:", Mana)
-
+            
 
             st.divider()
             st.write("Paradox?")
@@ -460,23 +474,47 @@ if HighArc != None:
                 "Did any Sleepers witness an obvious casting of magic?"
             ):
                 ParadoxDice += 1
-                SleeperDiceQuality = st.selectbox(
+
+                NumOfSleepers = st.selectbox(
                     "How many Sleepers saw your casting?",
                     (
-                        ("One",10),
-                        ("A few",9),
-                        ("A lot, less than 100",8),
-                        ("More than a hundred","Rote"),
-                    )[1]
+                        "One",
+                        "A few",
+                        "A lot, less than 100",
+                        "More than a hundred",
+                    )
                 )
+
+                if NumOfSleepers == "One":
+                    SleeperDiceQuality = 10
+                if NumOfSleepers == "A few":
+                    SleeperDiceQuality = 9
+                if NumOfSleepers == "A lot, less than 100":
+                    SleeperDiceQuality = 8
+                if NumOfSleepers == "More than a hundred":
+                    SleeperDiceQuality = "Rote"
+
             else:
                 SleeperDiceQuality = 10
+
             if st.checkbox("Are you using a dedicated magical tool?"):
                 ParadoxDice -= 2
+
+            st.divider()
+            st.write("Mana?")
+
+            ParadoxMana =st.number_input(
+                "Will you use any Mana to counteract Paradox?",
+                min_value=0,
+                max_value=100
+            )
+            Mana += ParadoxMana
 
             ParadoxDice -= ParadoxMana
             st.write("Total Paradox Dice after Mana amelioration:", ParadoxDice)
 
+
+            st.divider()
             if ParadoxDice > 0:
                 ParadoxChoice = st.selectbox(
                     "Do you wish to Release or Contain Paradox?",
@@ -490,25 +528,46 @@ if HighArc != None:
                     ReRollDice = True
                     while(NumOfRolls>0):
                         result = randint(1,10)
-                        (NumOfRolls,result)
+
                         if result >= 8: ParadoxSuccesses += 1
+                        
+                        # (NumOfRolls,result,ParadoxSuccesses)
+
                         if SleeperDiceQuality == "Rote":
                             if result < 8 and ReRollDice:
                                 ReRollDice = False
                                 continue
                         elif result >= SleeperDiceQuality:
                             continue
+                        
+                        ReRollDice = True
                         NumOfRolls -= 1
 
-                    ParadoxSuccesses
-                    # if SleeperDiceQuality == "More than a hundred":
-                    #     if result > 7:
-                    #         NumOfRolls -= NumOfRolls
+                    
+                    st.write("Total Paradox successes:", ParadoxSuccesses)
+                    DicePool -= ParadoxSuccesses
+
+                    if DicePool < -5:
+                        st.write("The spells fails to be cast!")
+                        st.stop()
+                    if DicePool >= -5 and DicePool < 1:
+                        DicePool = "Chance"
+                else:
+                    st.write(
+                        "Total Paradox Dice before Wisdom check: ",
+                        ParadoxDice
+                    )
+                    st.write("Roll Wisdom to remove Paradox Dice.")
+                    st.write(
+                        "Take 1 Resistant Bashing Damage for each ",
+                        "Wisdom success."
+                    )
 
 
-        # else:
-        #     st.write("Please set your Gnosis!")
-        
+            st.divider()
+            st.write("Total Mana required to cast the spell:", Mana)
+            st.write("Total Dice pool to cast the spell:", DicePool)
+
 
     else:
         st.write("Spell cannot be cast!")
